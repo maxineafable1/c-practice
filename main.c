@@ -1,8 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#define MAX_WEIGHT 250
+#define MAX_ENTRY_COUNT 5
+
 void view_weights(float *weights, int count);
 float *get_user_weight(int *count);
+float *update_weight(float *weights, int *count);
 
 int main()
 {
@@ -14,24 +18,39 @@ int main()
 
 	do
 	{
-		printf("1. Add New Weight\n");
-		printf("2. Update Weight Count\n");
-		printf("3. View All Weights\n");
+		printf("1. Create New Weight List\n");
+		printf("2. Update Current Weight List\n");
+		printf("3. View Current Weight List\n");
 		printf("0. Exit\n");
+		printf("> ");
 
-		scanf("%d", &choice);
+		if (scanf("%d", &choice) != 1)
+		{
+			printf("Invalid input\n");
+			while (getchar() != '\n');
+			continue;
+		}
 
+		
 		switch (choice)
 		{
 		case 1:
 		{
+			free(weights);
+
 			weights = get_user_weight(&count);
+			if (weights == NULL)
+				printf("Please try again.\n");
+			
+			break;
+		}
+		case 2:
+		{
+			weights = update_weight(weights, &count);
 			if (weights == NULL)
 				printf("Please try again.\n");
 			break;
 		}
-		case 2:
-			break;
 		case 3:
 			view_weights(weights, count);
 			break;
@@ -55,10 +74,10 @@ float *get_user_weight(int *count)
 {
 	do
 	{
-		printf("(MAXIMUM OF 10)\n");
+		printf("(MAXIMUM OF %d Count Per Entry)\n", MAX_ENTRY_COUNT);
 		printf("How many weights to enter: ");
 		scanf("%d", count);
-	} while (*count <= 0 || *count > 10);
+	} while (*count <= 0 || *count > MAX_ENTRY_COUNT);
 
 	float *weights = malloc(sizeof(float) * *count);
 
@@ -74,10 +93,55 @@ float *get_user_weight(int *count)
 				printf("(Kilograms)\n");
 				printf("Enter weight #%d: ", i + 1);
 				scanf("%f", &input);
-			} while (input <= 0 || input >= 250);
+			} while (input <= 0 || input >= MAX_WEIGHT);
 			weights[i] = input;
 		}
 	}
+	return weights;
+}
+
+float *update_weight(float *weights, int *count)
+{
+	if (*count == 0)
+	{
+		printf("Current Weight Count is %d\n", *count);
+		return NULL;
+	}
+
+	int new_count;
+	do
+	{
+		printf("(MAXIMUM OF %d Count Per Entry)\n", MAX_ENTRY_COUNT);
+		printf("How many additional weights to enter: ");
+		scanf("%d", &new_count);
+	} while (new_count <= 0 || new_count > MAX_ENTRY_COUNT);
+
+	new_count += *count;
+
+	float *new_weights = realloc(weights, sizeof(float) * new_count);
+
+	if (new_weights == NULL)
+	{
+		printf("Failed realloc\n");
+		return weights;
+	}
+
+	weights = new_weights;
+
+	for (int i = *count; i < new_count; i++)
+	{
+		float input;
+		do
+		{
+			printf("(Kilograms)\n");
+			printf("Enter weight #%d: ", i + 1);
+			scanf("%f", &input);
+		} while (input <= 0 || input >= 250);
+		weights[i] = input;
+	}
+
+	*count = new_count;
+
 	return weights;
 }
 
